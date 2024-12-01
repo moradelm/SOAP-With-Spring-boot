@@ -1,4 +1,4 @@
-name: OWASP ZAP Security Scan
+name: Dependency-Check Scan
 
 on:
   push:
@@ -6,34 +6,25 @@ on:
       - main
 
 jobs:
-  security-scan:
+  dependency-check:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-      # Pull OWASP ZAP Docker Image
-      - name: Pull OWASP ZAP Docker Image
+      - name: Run OWASP Dependency-Check
         run: |
-          docker pull owasp/zap2docker-stable:latest
+          docker pull owasp/dependency-check:latest
+          docker run --rm \
+            -v ${{ github.workspace }}:/src \
+            -v /tmp/dependency-check:/report \
+            owasp/dependency-check:latest --project "MyProject" --scan /src --out /report --format "HTML"
 
-      # Run OWASP ZAP Security Scan
-      - name: Run OWASP ZAP Security Scan
-        run: |
-          docker run -t owasp/zap2docker-stable:latest zap-baseline.py -t http://your-app-url -g gen.conf -r zap_report.html
-
-      # Upload ZAP Report as artifact
-      - name: Upload ZAP Report as artifact
+      - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v3
         with:
-          name: zap-report
-          path: zap_report.html
+          name: dependency-check-report
+          path: /tmp/dependency-check/*.html
