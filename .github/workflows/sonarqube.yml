@@ -25,7 +25,7 @@ jobs:
       - name: Pull OWASP ZAP Docker Image
         run: docker pull owasp/zap2docker-stable
 
-      # Run OWASP ZAP Security Scan
+      # Run OWASP ZAP Security Scan using docker run cmd
       - name: Run OWASP ZAP Security Scan
         run: |
           docker run -t owasp/zap2docker-stable zap-baseline.py -t http://your-app-url -g gen.conf -r zap_report.html
