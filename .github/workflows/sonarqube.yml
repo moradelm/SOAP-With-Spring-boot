@@ -1,45 +1,64 @@
-name: SonarQube Analysis
+name: DevSecOps Pipeline
 
 on:
   push:
     branches:
-      - main  # Trigger the analysis on push to the main branch
+      - main
   pull_request:
     branches:
-      - main  # Trigger the analysis during a pull request to the main branch
+      - main
 
 jobs:
   sonar:
     name: SonarQube Scan
-    runs-on: ubuntu-latest  # The job runs on an Ubuntu environment
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the source code
-      - uses: actions/checkout@v2
-        name: Checkout code
+      # Étape 1: Checkout du code source
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Step 2: Set up Java (using JDK 17 here)
+      # Étape 2: Configurer Java (JDK 17)
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
-          java-version: '17'  # Set to Java 17 for your project
+          java-version: '17'
           distribution: 'adoptopenjdk'
 
-      # Step 3: Cache SonarQube scanner dependencies (optional but recommended to speed up builds)
-      - name: Cache SonarQube scanner
-        uses: actions/cache@v2
-        with:
-          path: ~/.sonar
-          key: "${{ runner.os }}-sonar-${{ hashFiles('**/*.java') }}"  # Cache based on project Java files
-
-      # Step 4: Run SonarQube scanner
-      - name: Run SonarQube scanner
+      # Étape 3: Analyse SonarQube
+      - name: Run SonarQube Scan
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Fetch the SonarCloud token from GitHub Secrets
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # Download and install SonarQube Scanner
           curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
           unzip sonar-scanner-cli.zip
           export PATH=$PATH:$(pwd)/sonar-scanner-4.6.2.2472-linux/bin
-          sonar-scanner -Dsonar.projectKey=devsecopspratique  # Your actual SonarCloud project key
-          sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}  # Authentication using the SonarCloud token
+          sonar-scanner -Dsonar.projectKey=devsecopspratique
+          sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+  zap_scan:
+    name: OWASP ZAP Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1: Checkout du code source
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Étape 2: Lancer OWASP ZAP via Docker
+      - name: Start OWASP ZAP container
+        run: |
+          docker pull owasp/zap2docker-stable
+          docker run -d -u zap --name zap -p 8080:8080 owasp/zap2docker-stable
+
+      # Étape 3: Exécuter OWASP ZAP Scan
+      - name: Run ZAP scan
+        run: |
+          docker exec zap zap-baseline.py -t http://localhost:8080 -g gen.conf -r zap_report.html
+
+      # Étape 4: Télécharger le rapport ZAP
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: zap-report
+          path: zap_report.html
