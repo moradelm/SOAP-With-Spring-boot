@@ -24,12 +24,12 @@ jobs:
       # Pull OWASP ZAP Docker Image
       - name: Pull OWASP ZAP Docker Image
         run: |
-          docker pull owasp/zap2docker-stable || docker pull owasp/zap2docker-weekly
+          docker pull owasp/zap2docker-stable:latest
 
       # Run OWASP ZAP Security Scan
       - name: Run OWASP ZAP Security Scan
         run: |
-          docker run -t owasp/zap2docker-stable zap-baseline.py -t http://your-app-url -g gen.conf -r zap_report.html || docker run -t owasp/zap2docker-weekly zap-baseline.py -t http://your-app-url -g gen.conf -r zap_report.html
+          docker run -t owasp/zap2docker-stable:latest zap-baseline.py -t http://your-app-url -g gen.conf -r zap_report.html
 
       # Upload ZAP Report as artifact
       - name: Upload ZAP Report as artifact
