@@ -1,4 +1,4 @@
-name: Dependency-Check Scan.
+name: Dependency-Check Scan
 
 on:
   push:
@@ -20,11 +20,11 @@ jobs:
           docker pull owasp/dependency-check:latest
           docker run --rm \
             -v ${{ github.workspace }}:/src \
-            -v /tmp/dependency-check:/report \
-            owasp/dependency-check:latest --project "MyProject" --scan /src --out /report --format "HTML"
+            -v ${{ runner.temp }}/dependency-check:/report \
+            owasp/dependency-check:latest --project "MyProject" --scan /src --out /report --format "HTML" --purge
 
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v3
         with:
           name: dependency-check-report
-          path: /tmp/dependency-check/*.html
+          path: ${{ runner.temp }}/dependency-check/*.html
