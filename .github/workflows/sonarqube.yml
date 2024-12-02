@@ -23,14 +23,14 @@ jobs:
           
           # Exécuter le scan avec la configuration correcte
           docker run --rm \
-            -v ${{ github.workspace }}:/src \                       # Montage du code source
-            -v ${{ runner.temp }}/dependency-check:/report \        # Dossier pour le rapport
+            -v ${{ github.workspace }}:/src \                        # Montage du code source
+            -v ${{ runner.temp }}/dependency-check:/report \         # Dossier pour le rapport
             -v ${{ runner.temp }}/dependency-check-data:/usr/share/dependency-check/data \ # Dossier pour les données
             owasp/dependency-check:latest \
             --project "MyProject" \
             --scan /src \
-            --out /report \
             --format "HTML" \
+            --out /report \
             --update
 
       # Étape 3 : Publier le rapport comme artefact
