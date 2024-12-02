@@ -21,11 +21,11 @@ jobs:
           # Télécharger l'image Docker OWASP Dependency-Check
           docker pull owasp/dependency-check:latest
           
-          # Exécuter le scan avec la configuration correcte
+          # Exécuter le scan avec les bons chemins
           docker run --rm \
-            -v ${{ github.workspace }}:/src \                        # Montage du code source
-            -v ${{ runner.temp }}/dependency-check:/report \         # Dossier pour le rapport
-            -v ${{ runner.temp }}/dependency-check-data:/usr/share/dependency-check/data \ # Dossier pour les données
+            -v "${{ github.workspace }}:/src" \
+            -v "${{ runner.temp }}/report:/report" \
+            -v "${{ runner.temp }}/dependency-check-data:/usr/share/dependency-check/data" \
             owasp/dependency-check:latest \
             --project "MyProject" \
             --scan /src \
@@ -38,4 +38,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dependency-check-report
-          path: ${{ runner.temp }}/dependency-check/*.html
+          path: ${{ runner.temp }}/report/*.html
