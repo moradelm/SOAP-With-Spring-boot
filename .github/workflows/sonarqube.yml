@@ -1,41 +1,43 @@
-name: Dependency-Check
+name: OWASP Dependency-Check
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   dependency-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
-      # Étape 1 : Cloner le code
+      # Étape 1: Vérification du code source
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Étape 2 : Télécharger et exécuter OWASP Dependency-Check
-      - name: Run OWASP Dependency-Check
+      # Étape 2: Configuration de Docker
+      - name: Pull Dependency-Check Docker Image
+        run: docker pull owasp/dependency-check:latest
+
+      # Étape 3: Lancer l'analyse avec Dependency-Check
+      - name: Run Dependency-Check
         run: |
-          # Télécharger l'image Docker OWASP Dependency-Check
-          docker pull owasp/dependency-check:latest
-          
-          # Exécuter le scan avec les bons chemins
           docker run --rm \
-            -v "${{ github.workspace }}:/src" \
-            -v "${{ runner.temp }}/report:/report" \
-            -v "${{ runner.temp }}/dependency-check-data:/usr/share/dependency-check/data" \
+            -v "$(pwd):/src" \
+            -v "$(pwd)/dependency-check-report:/report" \
+            -v "$(pwd)/dependency-check-data:/usr/share/dependency-check/data" \
             owasp/dependency-check:latest \
             --project "MyProject" \
             --scan /src \
-            --format "HTML" \
-            --out /report \
-            --update
+            --format "ALL" \
+            --out /report
 
-      # Étape 3 : Publier le rapport comme artefact
+      # Étape 4: Upload du rapport en tant qu'artifact
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v3
         with:
           name: dependency-check-report
-          path: ${{ runner.temp }}/report/*.html
+          path: dependency-check-report
