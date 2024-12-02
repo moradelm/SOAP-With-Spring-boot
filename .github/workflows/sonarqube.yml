@@ -1,28 +1,39 @@
-name: Dependency-Check Scan
+name: Dependency-Check
 
 on:
   push:
     branches:
       - main
+  pull_request:
 
 jobs:
   dependency-check:
     runs-on: ubuntu-latest
+
     steps:
+      # Étape 1 : Cloner le code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
+      # Étape 2 : Télécharger et exécuter OWASP Dependency-Check
       - name: Run OWASP Dependency-Check
         run: |
+          # Télécharger l'image Docker OWASP Dependency-Check
           docker pull owasp/dependency-check:latest
+          
+          # Exécuter le scan avec la configuration correcte
           docker run --rm \
-            -v ${{ github.workspace }}:/src \
-            -v ${{ runner.temp }}/dependency-check:/report \
-            owasp/dependency-check:latest --project "MyProject" --scan /src --out /report --format "HTML" --purge
+            -v ${{ github.workspace }}:/src \                       # Montage du code source
+            -v ${{ runner.temp }}/dependency-check:/report \        # Dossier pour le rapport
+            -v ${{ runner.temp }}/dependency-check-data:/usr/share/dependency-check/data \ # Dossier pour les données
+            owasp/dependency-check:latest \
+            --project "MyProject" \
+            --scan /src \
+            --out /report \
+            --format "HTML" \
+            --update
 
+      # Étape 3 : Publier le rapport comme artefact
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v3
         with:
